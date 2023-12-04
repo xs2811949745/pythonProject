@@ -1,6 +1,6 @@
 import pandas as pd
 #打开文件
-file = pd.read_csv('2000123456张三.csv',encoding='gbk')
+file = pd.read_csv('2000123456张三.csv',encoding='utf-8')
 #print(file)
 
 #将NaN值填充为0 分组要求时考虑填充其他平均数、中位数等数值
