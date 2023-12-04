@@ -51,10 +51,12 @@ if __name__ == "__main__":
 
         # for k,v in packet_schema_json["properties"].items():
         #    print(k,v)
-
         # 从命令行split分号间隔的数据到 data_section中，类型为list
-        data_section = sys.argv[1].split(";")
         # 对data_section中的元素进行遍历，以便检查所有出现字段是否符合格式要求
+
+        # data_section = sys.argv[1].split(";")【cy】
+
+        data_section="QN=32016080108585722;ST=36;CN=1062;PW=100000;MN=010000A8900016F000169DC0;Flag=5;CP=&&DataTime=20160801085857;LA1-Rtd=50.1;LA2-Rtd=150.1&&"
         for item in data_section:
             # for i in range(len(schema_key_list)): #此处不能用正序循环
             # 逆序对schema_key_list保存的 json文件中的 properties属性进行遍历
@@ -90,16 +92,18 @@ if __name__ == "__main__":
         # 4.当以上检查都通过则说明本数据包无问题，继续执行以下代码
 
         # 获取CP=字符串的index
-        cp_index= sys.argv[1].index('CP=')
-
+        # cp_index= sys.argv[1].index('CP=')【cy】
+        cp_index = data_section.index('CP=')
         # 获取 字符串CP= 之前的主结构串，并转换为字典结构
-        d_main_struct = dict(x.split("=") for x in sys.argv[1][:cp_index - 1].split(";"))
+        # d_main_struct = dict(x.split("=") for x in sys.argv[1][:cp_index - 1].split(";"))【cy】
+        d_main_struct = dict(x.split("=") for x in data_section[:cp_index - 1].split(";"))
         #print(d_main_struct.keys())
         #print(d_main_struct.items())
         #print(d_main_struct.values())
 
         # 获取 字符串CP= 之后的 命令参数串
-        cp_str=sys.argv[1][cp_index:]
+        # cp_str=sys.argv[1][cp_index:]【cy】
+        cp_str = data_section[cp_index:]
         #print(cp_str)
         # 去掉CP= 后面的前后 && 符号
         cp_str_value=cp_str[3:].strip("&&")
