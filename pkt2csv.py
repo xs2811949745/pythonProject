@@ -58,7 +58,8 @@ def check_addtional(data_section,schema_key_list_all,allow_addition):
     a=[]
     for i in data_section:
         a.append(i.split("=")[0])
-
+        a.append(i.split("=")[0].upper())
+        a.append(i.split("=")[0].lower())# 【cy】目前问题所在12.6.01：00 目前能把程序运行cp链接，下一步，问老师FLAG和把相应数据写道相应框中
 
     if (not allow_addition["additionalProperties"]):
         #检查
@@ -68,7 +69,7 @@ def check_addtional(data_section,schema_key_list_all,allow_addition):
         else:
             return False
     else:
-        return True
+        return False
 
 def check_section(section,action):
 
@@ -128,9 +129,9 @@ def check_section(section,action):
                         raise ValueError("CP缺1个左&")
                     if (cp_v[1].find('&&') == -1):
                         raise ValueError("CP缺2个左&")
-                    if (cp_v[2].find('&') != -1 and cp_v[2].find('&&') == -1):
+                    if (cp_v[4].find('&') != -1 and cp_v[4].find('&&') == -1):
                         raise ValueError("CP缺1个右&")
-                    if (cp_v[2].find('&&') == -1):
+                    if (cp_v[4].find('&&') == -1):
                         raise ValueError("CP缺2个右&")
                 except Exception as e:
                     raise (e)
@@ -169,7 +170,7 @@ if __name__ == "__main__":
 
     with open('packet-schema-v2.1.json', 'r') as fcc_file:
         packet_schema_json = json.load(fcc_file)
-
+        cp_flag=0
         # {'properties': {'QN': {'type': 'string', 'format': 'date-time', 'minLength': 17, 'maxLength': 17},
         #                 'ST': {'type': 'string',
         #                        'enum': ['21', '22', '23', '24', '25', '26', '27', '31', '32', '33', '34', '35', '36',
@@ -198,7 +199,20 @@ if __name__ == "__main__":
 
         # data_section = sys.argv[1].split(";")
         # 【cy】
-        data_section="QN=20160801085857223;ST=32;CN=1062;PW=100000;MN=010000A8900016F000169DC0;Flag=5;CP=&&RtdInterval=30&&".split(";")
+        data_section="QN=20160801085857223;ST=32;CN=1062;PW=100000;MN=010000A8900016F000169DC0;Flag=5".split(";")
+        i=0
+
+    for x in data_section:
+        i+=1
+        if(x.find('CP=')!=-1 and i<len(data_section)):
+            data_section[i-1]=data_section[i-1]+data_section[i]
+            data_section.remove(data_section[i])
+            data_section[i-1]=data_section[i-1]+data_section[i]
+            data_section.remove(data_section[i])
+            break
+        else:
+            continue
+
     try:
         for item in data_section:
             # for i in range(len(schema_key_list)): #此处不能用正序循环
@@ -275,12 +289,10 @@ if __name__ == "__main__":
         #     raise e
 
         schema_key_list_remain=schema_key_list
-
-
         allow_addition = {"additionalProperties": False}
         schema_key_list = list(packet_schema_json["properties"].keys())
         bRet = check_addtional(data_section, schema_key_list, allow_addition)
-        if (bRet == False):
+        if (bRet == 0):
 
             raise ValueError("数据段多字段")
         # 2.判断输入数据是否符合dependentRequired规则的要求
@@ -289,13 +301,6 @@ if __name__ == "__main__":
         # allow_addition 用additionalProperties的value 赋值
         # },
         depend_dict=list(packet_schema_json["dependentRequired"].keys())
-        # bRet = check_depend(data_section, depend_dict)
-        # if(bRet==False):
-        #     if (sys.argv[1].find("PNO") != -1):
-        #         raise IndexError("数据段缺总包号")
-        #     else:
-        #         raise IndexError("数据段缺包号")
-        #本来作业需要 影响运行暂时注释【cy】
 
         # 此处赋值应该从Json文件中读取，而不是 直接赋值可以参考 packet_schema_json["properties"].keys()的写法
         # depend_dict = {
@@ -304,75 +309,97 @@ if __name__ == "__main__":
 
         # 3.判断输入数据是否出现超过properties定义的属性
 
-        required = ["QN", "ST", "CN", "PW", "MN", "Flag", "CP"]
-        # bRet = check_required(schema_key_list_remain, required)
-        # a=list(set(schema_key_list_remain)&set(required))
-        # if(bRet==False):
-        #     raise IndexError("数据段缺"+a[0])
-        # elif(bRet):
-        #     print("数据段完整")
-        #本来作业需要 影响运行暂时注释【cy】
 
         # schema_key_list_all 此处应该重新对schema_key_list_all 赋值，代码前面有
-    except Exception as e:
-        print(e)
+    # except Exception as e:
+    #     print(e)
 # print("数据段正常")
 
 
 # 以上为作业六
 
 
-    try:
+
         # 3.判断输入数据是否出现超过properties定义的属性
         # "additionalProperties": false
         # 4.当以上检查都通过则说明本数据包无问题，继续执行以下代码
         # 获取CP=字符串的index
 
-        data_section1="QN=20160801085857223;ST=32;CN=1062;PW=100000;MN=010000A8900016F000169DC0;Flag=5;CP=&&RtdInterval=30&&"
-        # cp_index= sys.argv[1].index('CP=')
-        # 【cy】
-        cp_index = data_section1.index('CP=')
-
-        # 获取 字符串CP= 之前的主结构串，并转换为字典结构
-        # d_main_struct = dict(x.split("=") for x in sys.argv[1][:cp_index - 1].split(";"))
-        # 【cy】
-        d_main_struct = dict(x.split("=") for x in data_section1[:cp_index - 1].split(";"))
         # print(d_main_struct.keys())
         # print(d_main_struct.items())
         # print(d_main_struct.values())
 
         # 获取 字符串CP= 之后的 命令参数串
-        # cp_str=sys.argv[1][cp_index:]
-        # 【cy】
-        cp_str = data_section1[cp_index:]
-        #print(cp_str)
-        # 去掉CP= 后面的前后 && 符号
-        cp_str_value=cp_str[3:].strip("&&")
-        #print(cp_str_value)
+        required = ["QN", "ST", "CN", "PW", "MN", "Flag", "CP"]
+        bRet = check_depend(data_section, depend_dict)
+        if(bRet==0):
+            if (sys.argv[1].find("PNO") != -1):
+                raise IndexError("数据段缺总包号")
+            else:
+                raise IndexError("数据段缺包号")
 
-        # 将 命令参数串 转换为字典
-        d_command_param= dict(x.split("=") for x in cp_str_value.split(";"))
-
-        # 合并 d_main_struct 和  d_command_param 两个字典到 d_merge
-        d_merge={}
-        d_merge=d_main_struct.copy()
-        d_merge.update(d_command_param)
-        # print (d_merge.keys())
-        # print(d_merge.items())
-        # print(d_merge.values())
-
-        # 准备将 d_merge 字典输出到csv文件
-        import os
-        # 判断文件是否存在，如果存在则不重复输出表头（字典的key）
-        csv_exist_flag = os.path.exists('2000123456张三.csv')
-
-        import csv
-        with open('2000123456张三.csv', 'a') as file:
-            writer = csv.writer(file)
-            # 判断csv_exist_flag 不要重复输出csv的表头
-            if not csv_exist_flag:
-                writer.writerow(d_merge.keys())
-            writer.writerow(d_merge.values())
-
+        bRet = check_required(schema_key_list_remain, required)
+        a=list(set(schema_key_list_remain)&set(required))
+        if(a==['CP']):
+            cp_flag=1#cp_flag=1代表cp缺少,否则代表他不缺少
+        if(bRet==0):
+            raise IndexError("数据段缺"+a[0])
+        elif(bRet==1):
+            print("数据段完整")
     except Exception as e:
         print(e)
+
+
+
+    # 【cy】
+    data_section1="QN=20160801085857223;ST=32;CN=1062;PW=100000;MN=010000A8900016F000169DC0;Flag=5"
+
+    if(cp_flag==1):
+        data_section1=data_section1+"CP="
+        # sys.argv[1]=sys.argv[1]+'CP='
+    # cp_index= sys.argv[1].index('CP=')
+    cp_index = data_section1.index('CP=')#不缺cp的情况下
+
+
+    # 获取 字符串CP= 之前的主结构串，并转换为字典结构
+
+    # 【cy】
+    d_main_struct = dict(x.split("=") for x in data_section1[:cp_index - 1].split(";"))
+    # d_main_struct = dict(x.split("=") for x in sys.argv[1][:cp_index - 1].split(";"))
+    # 【cy】
+    cp_str=sys.argv[1][cp_index:]
+    # cp_str = data_section1[cp_index:]
+    #print(cp_str)
+    # 去掉CP= 后面的前后 && 符号
+    cp_str_value=cp_str[3:].strip("&&")
+    #print(cp_str_value)
+
+    # 将 命令参数串 转换为字典
+    if(cp_str_value==''):
+        d_command_param =''
+    else:
+        d_command_param= dict(x.split("=") for x in cp_str_value.split(";"))
+
+    # 合并 d_main_struct 和  d_command_param 两个字典到 d_merge
+
+
+    d_merge={}
+    d_merge=d_main_struct.copy()
+    d_merge.update(d_command_param)
+    # print (d_merge.keys())
+    # print(d_merge.items())
+    # print(d_merge.values())
+
+    # 准备将 d_merge 字典输出到csv文件
+    import os
+    # 判断文件是否存在，如果存在则不重复输出表头（字典的key）
+    csv_exist_flag = os.path.exists('2000123456张三.csv')
+
+    import csv
+    with open('2000123456张三.csv', 'a') as file:
+        writer = csv.writer(file)
+        # 判断csv_exist_flag 不要重复输出csv的表头
+        if not csv_exist_flag:
+            writer.writerow(d_merge.keys())
+        writer.writerow(d_merge.values())
+
