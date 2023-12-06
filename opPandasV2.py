@@ -1,7 +1,9 @@
+import time
+from datetime import datetime
 import pandas as pd
 #打开文件
-file = pd.read_csv('2000123456张三.csv',encoding='utf-8')
-#print(file)
+file = pd.read_csv('221040100213胡焮铭.csv',encoding='utf-8')
+print(file)
 
 #将NaN值填充为0 分组要求时考虑填充其他平均数、中位数等数值
 filefull=file.fillna(value=0)
@@ -17,7 +19,19 @@ cntHeader = len(list(header))
 #print(cntHeader)
 #
 # #获取 QN 列的行数
-current_col_list = list(fileDF['QN'])
+current_col_list = list(fileDF['DataTime'])
+format = "%Y%m%d%H%M%S%f"
+
+for x in fileDF.index:
+
+   try:
+       d=datetime.strptime(str(fileDF.loc[x,'DataTime']),format)
+   except:
+       fileDF.drop(x,inplace=True)
+
+
+
+
 cntRow = len(current_col_list)
 #print(cntRow)
 #按行计算值
