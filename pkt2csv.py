@@ -23,9 +23,6 @@ def check_required(schema_key_list_remain,required_key):
             return True
     except Exception as e:
         raise e
-
-
-
 # 传入参数：
 # param1:完整数段全部数据 data_section ，包含以分号间隔的各个字段
 # param2:depend_dict 依赖关系字典
@@ -45,17 +42,12 @@ def check_depend(data_section,depend_dict):
         return False
     # 否则返回True
     pass
-
 # 传入参数：
 # param1:完整数段全部数据 data_section ，包含以分号间隔的各个字段
 # param2: 格式要求中的Properties中所有字典的Key
 # param3:  jsonschema 定义的是否需要检查
 # 返回值 bool 通过则返回True，否则返回False
-
 def check_addtional(data_section,schema_key_list_all,allow_addition):
-    #如果 data_section中包含的Key超出schema_key_list_all中包含的key 则说明出现附加字段，返回False
-    # 否则返回True
-    # 【cy】目前问题所在12.6.01：00 目前能把程序运行cp链接，下一步，问老师FLAG和把相应数据写道相应框中
     a = []
     for i in data_section:
         a.append(i.split("=")[0])
@@ -68,11 +60,7 @@ def check_addtional(data_section,schema_key_list_all,allow_addition):
             return False
     else:
         return False
-
 def check_section(section,action):
-
-
-
     #print("section:",section)
     #print(type(action))
     # 提取输入数据section中 等号后面的数据部分
@@ -83,12 +71,10 @@ def check_section(section,action):
             raise IndexError(section_k + "无值")
     except IndexError as e:
         raise (e)
-        # raise IndexError("输入数据:", section_v, " 输入数据缺符号：=")
     try:
         if ("format" in action.keys()):
             # print(action["format"])
             # 如果当前待查字段jsonschema规则存在format 对应的要求是 date-time 则按照日期格式 检查数据
-
             try:
                 # 定义日期格式 年月日时分秒毫秒
                 format = "%Y%m%d%H%M%S%f"
@@ -105,9 +91,13 @@ def check_section(section,action):
                 raise ValueError(section_k+"值域错误")
             else:
                 pass
-
             # 如果当前待查字段jsonschema规则存在minLength && maxLength字段 则检查数据section_v的长度是否符合要求
     #测长度大小
+        if("type" in action.keys()) and action["type"]=='integer':
+            try:
+                int(section_v)
+            except:
+                raise IndexError(section_k+"不是整数")
         if ("minLength" in action.keys()) and ("maxLength" in action.keys()):
             # 取当前输入数据的长度和规则中规定的比较
             if not ((len(section_v) >= action["minLength"]) and (len(section_v) <= action["maxLength"])):
@@ -123,6 +113,8 @@ def check_section(section,action):
                 try:
                     if (cp_v[1] == "&&&&"):
                         raise ValueError("CP正确无参数")
+                    if(cp_v[1].find('&') != -1 and cp_v[1].find('&&') == -1 and cp_v[-1].find('&') != -1 and cp_v[-1].find('&&') == -1):
+                        raise ValueError("CP缺一个左&缺一个右&")
                     if (cp_v[1].find('&') != -1 and cp_v[1].find('&&') == -1):
                         raise ValueError("CP缺1个左&")
                     if (cp_v[1].find('&&') == -1):
@@ -148,68 +140,47 @@ def check_section(section,action):
                                 pass
     except Exception as e:
         raise e
-
-
-        # 依次判断jsonschema文件中定义的所有检查动作
-        # 如果当前待查字段jsonschema规则存在format 字段
-#测是否日期
-            # else:
-            #         # 对应字段不是整形数据
-            #         raise ValueError(section_k, " mum检查:", section_v, "不是整型数据")
-        # else:
-        #     ## 未来扩展非 integer的判断
-        #     pass//
-
 if __name__ == "__main__":
     # 打印命令行参数
     # print ("sys.arg[1]:",sys.argv[1])
     with open('packet-schema-v2.1.json', 'r') as fcc_file:
         bRet=0
-    # 使用分号切分数据段数据 ，赋值给变量 data_section
         packet_schema_json = json.load(fcc_file)
         cp_flag=0
-        # {'properties': {'QN': {'type': 'string', 'format': 'date-time', 'minLength': 17, 'maxLength': 17},
-        #                 'ST': {'type': 'string',
-        #                        'enum': ['21', '22', '23', '24', '25', '26', '27', '31', '32', '33', '34', '35', '36',
-        #                                 '37', '38', '39', '41', '51', '52', '91']},
-        #                 'CN': {'type': 'integer', 'minimum': 1000, 'maximum': 9999},
-        #                 'PW': {'type': 'string', 'minLength': 6, 'maxLength': 6},
-        #                 'MN': {'type': 'string', 'minLength': 24, 'maxLength': 24},
-        #                 'Flag': {'type': 'integer', 'minimum': 0, 'maximum': 255}, 'PNUM': {'type': 'integer'},
-        #                 'PNO': {'type': 'integer'}, 'CP': {'type': 'string'}},
-        #  'required': ['QN', 'ST', 'CN', 'PW', 'MN', 'Flag', 'CP'], 'dependentRequired': {'PNO': ['PNUM']},
-        #  'additionalProperties': False}
-
-        # 查看当前fcc_data文件中保存到json对象
-        # print(json.dumps(fcc_data, indent=4, sort_keys=True))
-
-        # 将 当前 json文件中的properties属性中的key 保存到 schema_key_list 中
         schema_key_list = list(packet_schema_json["properties"].keys())
         schema_key_list.sort()
-        # print(schema_key_list)
-        # for k,v in packet_schema_json["properties"].items():
-        #    print(k,v)
-        # 从命令行split分号间隔的数据到 data_section中，类型为list
-        # str="QN=320160801085857223;ST=32;CN=1062;PW=100000;MN=010000A8900016F000169DC0;Flag=5;CP=&&RtdInterval=30&&"
-        # data_section=str.split((";"))
-        #  对data_section中的元素进行遍历，以便检查所有出现字段是否符合格式要求
 
+        # str="QN=20160801085857223;ST=21;CN=2011;PW=100000;MN=010000A8900016F000169DC2;Flag=5;CP=&&DataTime=20231231084857;w01001-Rtd=7.5;w01012-Rtd=&&"
+        # data_section=str.split((";"))
         data_section = sys.argv[1].split(";")
         # 【cy】
-        # data_section="QN=20160801085857223;ST=32;CN=1062;PW=100000;MN=010000A8900016F000169DC0;Flag=5;CP=&&RtdInterval=30&&".split(";")
-        i=0
 
-    for x in data_section:
-        i+=1
-        if(x.find('CP=')!=-1 and i<len(data_section)):
-            data_section[i-1]=data_section[i-1]+data_section[i]
-            data_section.remove(data_section[i])
-            data_section[i-1]=data_section[i-1]+data_section[i]
-            data_section.remove(data_section[i])
-            break
-        else:
-            continue
+        # data_section="QN=20160801085857223;ST=21;CN=2011;PW=100000;MN=010000A8900016F000169DC2;Flag=5;CP=&&DataTime=20231231084857;w01001-Rtd=7.5;w01012-Rtd=&&".split(";")
+        i=0
     try:
+        try:
+            for x in data_section:
+                i+=1
+                if(x.find('CP=')!=-1 and i<len(data_section)):
+                    data_section[i-1]=data_section[i-1]+data_section[i]
+                    data_section.remove(data_section[i])
+                    while(data_section[i-1]!=data_section[-1]):
+                        data_section[i-1]=data_section[i-1]+data_section[i]
+                        data_section.remove(data_section[i])
+                        if(data_section[-1].count("=")>4):
+                            raise ValueError("CP中多字段")
+                    if(data_section[i-1].find("w01012-Rtd")==-1):
+                        raise ValueError("CP缺w01012-Rtd的数据")
+                    elif (data_section[i - 1].find("w01001-Rtd") == -1):
+                        raise ValueError("CP缺w01001-Rtd的数据")
+                    elif(data_section[i - 1].find("DataTime") == -1):
+                        raise ValueError("CP日期缺DataTime")
+
+                else:
+                    continue
+        except Exception as e:
+            bRet = 0
+            raise e
         for item in data_section:
             # for i in range(len(schema_key_list)): #此处不能用正序循环
             # 逆序对schema_key_list保存的 json文件中的 properties属性进行遍历
@@ -226,102 +197,17 @@ if __name__ == "__main__":
                     except ValueError as e:
                         raise e
                     break
-        ## 此时 schema_key_list 没有被 remove 的数据为 jsonschema定义中未参与检查的字段
-        # print("schema_key_list remain:", schema_key_list)
 
-
-        ## 接下来需要学生在实验4期间继续完成一下3个部分的检查
-        # 1.比较schema_key_list中的元素是否和required存在交集，
-        # 如果有则说明输入数据中缺少部分必须出现的字段
-        # "required": [ "QN", "ST", "CN", "PW" ,"MN" ,"Flag" ,"CP" ],
-
-        ## 接下来需要学生在实验4期间继续完成一下3个部分的检查
-        ## 此时 schema_key_list 没有被 remove 的数据为 jsonschema定义中未参与检查的字段
-        # print("schema_key_list remain:", schema_key_list)
-        # 1.比较schema_key_list中的元素是否和required存在交集，
-        # 如果有则说明输入数据中缺少部分必须出现的字段
-        # "required": [ "QN", "ST", "CN", "PW" ,"MN" ,"Flag" ,"CP" ],
-        # required = ["QN", "ST", "CN", "PW", "MN", "Flag", "CP"]
-
-
-
-
-                    # 2.判断输入数据是否符合dependentRequired规则的要求
-                    # "dependentRequired": {
-                    # "PNO": ["PNUM"]
-                    # },
-        # try:        # 此处赋值应该从Json文件中读取，而不是 直接赋值可以参考 packet_schema_json["properties"].keys()的写法
-            # depend_dict = {
-            #     "PNO": ["PNUM"]
-            # }
-            # depend_dict=list(packet_schema_json["dependentRequired"].keys())
-            # bRet = check_depend(data_section, depend_dict)
-            # if(bRet==False):
-            #     if(sys.argv[1].find("PNO")!=-1):
-            #         raise ValueError("数据段缺总包号")
-            #     else:
-            #         raise ValueError("数据段缺包号")
-        # except Exception as e:
-        #     raise e
-                    # 3.判断输入数据是否出现超过properties定义的属性
-
-        #     schema_key_list_all=list(packet_schema_json["properties"].keys())
-        #     allow_addition = {"additionalProperties": False}
-        #     bRet = check_addtional(data_section, schema_key_list_all, allow_addition)
-        #     if(bRet):
-        #         raise ValueError("数据段多字段")
-        # except Exception as e:
-        #     raise e
-        # schema_key_list_all 此处应该重新对schema_key_list_all 赋值，代码前面有
-        # allow_addition 用additionalProperties的value 赋值
-        # try:
-        #     bRet = check_required(schema_key_list, required)
-        #     if(bRet==False):
-        #         raise ValueError("数据段缺数据"+set(schema_key_list)&set(required)[0])
-        #     else:
-        #         raise ValueError("数据段完整")
-        # except Exception as e:
-        #     raise e
         schema_key_list_remain=schema_key_list
         allow_addition = {"additionalProperties": False}
         schema_key_list = list(packet_schema_json["properties"].keys())
         bRet = check_addtional(data_section, schema_key_list, allow_addition)
         if (bRet == 0):
             raise ValueError("数据段多字段")
-        # 2.判断输入数据是否符合dependentRequired规则的要求
-        # "dependentRequired": {
-        # "PNO": ["PNUM"]
-        # allow_addition 用additionalProperties的value 赋值
-        # },
         depend_dict=list(packet_schema_json["dependentRequired"].keys())
-        # 此处赋值应该从Json文件中读取，而不是 直接赋值可以参考 packet_schema_json["properties"].keys()的写法
-        # depend_dict = {
-        #     "PNO": ["PNUM"]
-        # }
-
-        # 3.判断输入数据是否出现超过properties定义的属性
-
-
-        # schema_key_list_all 此处应该重新对schema_key_list_all 赋值，代码前面有
-    # except Exception as e:
-    #     print(e)
-# print("数据段正常")
 
 
 # 以上为作业六
-
-
-
-        # 3.判断输入数据是否出现超过properties定义的属性
-        # "additionalProperties": false
-        # 4.当以上检查都通过则说明本数据包无问题，继续执行以下代码
-        # 获取CP=字符串的index
-
-        # print(d_main_struct.keys())
-        # print(d_main_struct.items())
-        # print(d_main_struct.values())
-
-        # 获取 字符串CP= 之后的 命令参数串
         required = ["QN", "ST", "CN", "PW", "MN", "Flag", "CP"]
         bRet = check_depend(data_section, depend_dict)
         if(bRet==0):
@@ -334,17 +220,143 @@ if __name__ == "__main__":
         a=list(set(schema_key_list_remain)&set(required))
         if(a==['CP']):
             cp_flag=1#cp_flag=1代表cp缺少,否则代表他不缺少
+
         if(bRet==0):
             raise IndexError("数据段缺"+a[0])
-        elif(bRet==1):
+
+        # CP = & & DataTime = 20231201082857;
+        # w01001 - Rtd = 7.0;
+        # w01012 - Rtd = 10.9&&
+        #下面对CP中的相关数据进行合法性检查
+        # 【cy】
+        try:
+            cp_index=sys.argv[1].index('CP=')
+        except :
+            raise ValueError("数据段缺CP")
+        cp_str=sys.argv[1][cp_index:]
+        # data_section1="QN=20160801085857223;ST=21;CN=2011;PW=100000;MN=010000A8900016F000169DC2;Flag=5;CP=&&DataTime=20231231084857;w01001-Rtd=7.5;w01012-Rtd=&&"
+        # cp_index=data_section1.index('CP=')#缺cp怎么办?
+        # cp_str = data_section1[cp_index:]
+        #确定cp标准
+        cp_standard={
+            "w01001-Rtd":
+                {
+                    "type":1.0,
+                    "min":0,
+                    "max":150
+                },
+            "w01012-Rtd":
+                {
+                    "type": 1.0,
+                    "min": 0,
+                    "max": 150
+                },
+            "DataTime":
+                {
+                    "type":"string",
+                    "maxlength":14,
+                    "minlength":14
+                }
+        }
+        # 【cy】
+        try:
+            if(sys.argv[1].find("DataTime=")==-1):
+                raise ValueError("CP缺DataTime的等号")
+            if (sys.argv[1].find("w01012-Rtd=") == -1):
+                raise ValueError("CP中w01012-Rtd缺等号")
+            if (sys.argv[1].find("w01001-Rtd=") == -1):
+                raise ValueError("CP中w01001-Rtd缺等号")
+        except Exception as e:
+            raise e
+        string=cp_str
+        # 去掉字符串开头和结尾的 "CP=&&" 和 "&&"
+        string = string.strip("CP=&&").strip("&&")
+
+        # 分割字符串，得到键值对列表
+        pairs = string.split(";")
+
+        # 创建一个空字典
+        data_dict = {}
+        pairs+=''
+        # 遍历键值对列表
+        for pair in pairs:
+            # 分割键值对，得到键和值
+            # 将键值对添加到字典中
+            try:
+                key, value = pair.split("=")
+                data_dict[key] = value
+            except:
+                raise IndexError("w01012-Rtd的值为空")
+        for x in data_dict.keys():
+            if (x == "DataTime"):
+                if (data_dict[x] == ''):
+                    raise ValueError("DataTime值为空")
+            if(x=="DataTime"):
+                try:
+
+                     if len(data_dict[x])>cp_standard[x]["maxlength"]:
+                         bRet = 0
+                         raise ValueError("CP中DataTime长度多")
+                     if len(data_dict[x])<cp_standard[x]["minlength"]:
+                         bRet = 0
+                         raise ValueError("CP中DataTime长度缺")
+                except Exception as e:
+                    bRet = 0
+                    raise e
+                try:
+                     datetime.strptime(data_dict[x], "%Y%m%d%H%M%S")
+                except Exception as e:
+                     raise ValueError("DataTime不是日期")
+                except Exception as e:
+                    bRet = 0
+                    raise e
+            if(x=="w01001-Rtd"):
+                try:
+                     float(data_dict[x])
+                except:
+                    bRet = 0
+                    if data_dict[x] != '':
+                        raise IndexError("w01001-Rtd的值不是数字")
+                    else:
+                        raise IndexError("w01001-Rtd的值为空")
+                try:
+                    if (data_dict[x] == ''):
+                        raise ValueError("w01001-Rtd值为空")
+                    if float(data_dict[x])>cp_standard[x]["max"]:
+                        bRet = 0
+                        raise ValueError("w01001-Rtd的值过大")
+                    if float(data_dict[x])<cp_standard[x]["min"]:
+                        bRet = 0
+                        raise ValueError("w01001-Rtd的值过小")
+                except Exception as e:
+                    bRet = 0
+                    raise e
+            if (x == "w01012-Rtd"):
+                try:
+                     float(data_dict[x])
+                except:
+                    bRet = 0
+                    raise IndexError("w01012-Rtd的值不是数字")
+                try:
+                    if float(data_dict[x])>cp_standard[x]["max"]:
+                        bRet = 0
+                        raise ValueError("w01012-Rtd的值过大")
+                    if float(data_dict[x])<cp_standard[x]["min"]:
+                        bRet = 0
+                        raise ValueError("w01012-Rtd的值过小")
+                except Exception as e:
+                    bRet = 0
+                    raise e
+        if(bRet==1):
             print("数据段完整")
     except Exception as e:
+        bRet = 0
         print(e)
 
 
 
     # 【cy】
-    # data_section1="QN=20160801085857223;ST=32;CN=1062;PW=100000;MN=010000A8900016F000169DC0;Flag=5;CP=&&RtdInterval=30&&"
+    # data_section1="QN=20160801085857223;ST=21;CN=2011;PW=100000;MN=010000A8900016F000169DC2;Flag=5;CP=&&DataTime=20231231084857;w01001-Rtd=7.5;w01012-Rtd=&&"
     if(bRet==1):
         if(cp_flag==1):
             # data_section1=data_section1+"CP="
@@ -371,20 +383,11 @@ if __name__ == "__main__":
             d_command_param =''
         else:
             d_command_param= dict(x.split("=") for x in cp_str_value.split(";"))
-
-        # 合并 d_main_struct 和  d_command_param 两个字典到 d_merge
-
-
         d_merge={}
         d_merge=d_main_struct.copy()
         d_merge.update(d_command_param)
-        # print (d_merge.keys())
-        # print(d_merge.items())
-        # print(d_merge.values())
-
-        # 准备将 d_merge 字典输出到csv文件
         import os
-        # 判断文件是否存在，如果存在则不重复输出表头（字典的key）
+
         csv_exist_flag = os.path.exists('221040100213胡焮铭.csv')
 
         import csv
