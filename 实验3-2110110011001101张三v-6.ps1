@@ -1,5 +1,4 @@
-﻿#coding=utf-8
-echo "`r`ncheck1-1=============>QN长度多"
+﻿echo "`r`ncheck1-1=============>QN长度多"
 python D:\Pycharm\pythonProject1\pkt2csv.py  "QN=320160801085857223;ST=32;CN=1062;PW=100000;MN=010000A8900016F000169DC0;Flag=5;CP=&&RtdInterval=30&&"
 
 echo "`r`ncheck1-2=============>QN长度缺"
