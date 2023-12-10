@@ -1,0 +1,48 @@
+{
+    "properties": {
+    "QN": {
+        "type": "string",
+        "format": "date-time",
+        "minLength": 17,
+        "maxLength": 17  
+    },
+    "ST": {
+        "type": "string",
+        "enum": ["21","22","23","24","25","26","27","31","32","33","34","35","36","37","38","39","41","51","52","91"]
+    },
+    "CN": {
+        "type": "integer",
+        "minimum": 1000,
+        "maximum": 9999  
+    },
+    "PW": {
+        "type": "string",
+        "minLength": 6,
+        "maxLength": 6  
+    },
+    "MN": {
+        "type": "string",
+        "minLength": 24,
+        "maxLength": 24
+    },
+    "Flag": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255    
+    },
+    "PNUM": {
+        "type": "integer"
+    },
+    "PNO": {
+        "type": "integer"
+    },
+    "CP": {
+        "type": "string"
+    }
+},
+ "required": [ "QN", "ST", "CN", "PW" ,"MN" ,"Flag" ,"CP" ],
+ "dependentRequired": {
+        "PNO": ["PNUM"]
+      },
+ "additionalProperties": false
+}
